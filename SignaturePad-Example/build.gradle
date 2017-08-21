@@ -23,4 +23,7 @@ android {
 dependencies {
     compile project(":signature-pad")
     compile 'com.android.support:appcompat-v7:25.3.1'
+    compile 'com.tom_roush:pdfbox-android:1.8.9.1'
+    compile 'com.itextpdf:itextg:5.5.10'
+
 }

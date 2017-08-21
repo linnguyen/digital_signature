@@ -4,12 +4,16 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.pdf.PdfDocument;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.DocumentsContract;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
@@ -18,6 +22,14 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.github.gcacace.signaturepad.views.SignaturePad;
+import com.itextpdf.text.Image;
+import com.itextpdf.text.pdf.BaseFont;
+import com.itextpdf.text.pdf.PdfContentByte;
+import com.itextpdf.text.pdf.PdfReader;
+import com.itextpdf.text.pdf.PdfStamper;
+import com.tom_roush.pdfbox.pdmodel.PDDocument;
+import com.tom_roush.pdfbox.pdmodel.PDPage;
+import com.tom_roush.pdfbox.pdmodel.graphics.image.PDImageXObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -34,6 +46,8 @@ public class MainActivity extends Activity {
     private SignaturePad mSignaturePad;
     private Button mClearButton;
     private Button mSaveButton;
+    private static int RESULT_LOAD_IMAGE = 1;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +91,38 @@ public class MainActivity extends Activity {
                 Bitmap signatureBitmap = mSignaturePad.getSignatureBitmap();
                 if (addJpgSignatureToGallery(signatureBitmap)) {
                     Toast.makeText(MainActivity.this, "Signature saved into the Gallery", Toast.LENGTH_SHORT).show();
+//                    File file = new File("/storage/emulated/0/Documents/RyneFix.pdf");
+                    try {
+
+                        PdfReader pdfReader = new PdfReader("/storage/emulated/0/Documents/RyneFix.pdf");
+                        PdfStamper pdfStamper = new PdfStamper(pdfReader,
+                                new FileOutputStream("/storage/emulated/0/Documents/RyneFixHihi.pdf"));
+                        Image image = Image.getInstance("/storage/emulated/0/Pictures/SignaturePad/Signature_1503286075440.jpg");
+                        for (int i = 1; i <= pdfReader.getNumberOfPages(); i++) {
+                            //put content under
+                            PdfContentByte content = pdfStamper.getUnderContent(i);
+                            content.setTextRenderingMode(PdfContentByte.ALIGN_CENTER);
+                            image.setAbsolutePosition(10f, 15f);
+                            content.addImage(image);
+
+                            //put content over
+                            content = pdfStamper.getOverContent(i);
+                            image.setAbsolutePosition(30f, 15f);
+                            content.addImage(image);
+
+                            //Text over the existing page
+                            BaseFont bf = BaseFont.createFont(BaseFont.HELVETICA,
+                                    BaseFont.WINANSI, BaseFont.EMBEDDED);
+                            content.beginText();
+                            content.setFontAndSize(bf, 5);
+                            content.showTextAligned(PdfContentByte.ALIGN_CENTER, "Page No: " + i, 430, 15, 0);
+                            content.endText();
+                        }
+                        pdfStamper.close();
+                    } catch (Exception e) {
+                        e.getMessage();
+                    }
+
                 } else {
                     Toast.makeText(MainActivity.this, "Unable to store the signature", Toast.LENGTH_SHORT).show();
                 }
@@ -87,6 +133,20 @@ public class MainActivity extends Activity {
                 }
             }
         });
+
+
+//        File directoryFolder = Environment.getExternalStoragePublicDirectory(Environment.);
+//        if (directoryFolder.exists()) {
+//            if (directoryFolder.isDirectory()) {
+//                if (directoryFolder.list() != null) {
+//                    String[] children = directoryFolder.list();
+//                    for (int i = 0; i < children.length; i++) {
+//                        File file = new File(directoryFolder, children[i]);
+//                        Log.d("PATH", file.getAbsolutePath());
+//                    }
+//                }
+//            }
+//        }
     }
 
     @Override
@@ -181,4 +241,5 @@ public class MainActivity extends Activity {
             );
         }
     }
+
 }
